@@ -1,14 +1,13 @@
 AWSTemplateFormatVersion: 2010-09-09
 Description: |
   This CloudFormation Template was written for runnig Kittens Carousel Static Website on
-  is dowloaded form my Public Github repository, then deployed on Apache Web Server
-
+  is dowloaded form my Public Github repository, then deployed on Apache Web Server.
 Resources:
- WebServerSecurityGroup:
-   Type: AWS::EC2::SecurityGroup
-   Properties:
-     GroupDescription: Enable HTTP for Apache Web Server and SSH for secure connection
-     SecurityGroupIngress:
+  WebServerSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Enable HTTP for Apache Web Server and SSH for secure connection
+      SecurityGroupIngress:
       - IpProtocol: tcp
         FromPort: 80  
         ToPort: 80
@@ -24,18 +23,29 @@ Resources:
       InstanceType: t2.micro
       KeyName: formast
       SecurityGroupIds:
-        !Ref WebServerSecurityGroup
+        - !Ref WebServerSecurityGroup
       Tags:
         - Key: Name
-          Value: Web Server of ${AWS::StackName} Stack
+          Value: !Sub Web Server of ${AWS::StackName} Stack
       UserData:
         Fn::Base64:
           !Sub |
             # /bin/bash
             yum update -y
             yum install httpd -y
+            FOLDER="https://raw.githubusercontent.com/umitkarakas123/Kittens-Carousel-Static-Website/main/static-web"
             cd /var/www/html
-      Volumes:
-        Volumes
+            wget $FOLDER/index.html
+            wget $FOLDER/cat0.jpg
+            wget $FOLDER/cat1.jpg
+            wget $FOLDER/cat2.jpg
+            wget $FOLDER/cat3.png
+            systemctl start httpd
+            systemctl enable httpd
   
 Outputs:
+  WebsiteURL:
+    Value: !Sub
+      - http://${PublicAddress}
+      - PublicAddress: !GetAtt WebServerHost.PublicDnsName
+    Description: Kittens Carousel Application URL
